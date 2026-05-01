@@ -16,6 +16,25 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### ControlTear (`artifacts/controltear`)
+- **Kind**: React + Vite web app (JavaScript, no TypeScript)
+- **Preview**: `/`
+- **Purpose**: Production downtime tracker for a textile factory
+- **Firebase**: Firestore (no Auth) — credentials via VITE_FIREBASE_* env secrets
+- **PDF Export**: jsPDF (dynamic import, blob download)
+- **Auth**: Fake local auth (localStorage) — user name + cargo, then turma selection
+- **Structure**:
+  - `src/firebase.js` — Firestore init
+  - `src/constants.js` — MOTIVOS, CARGOS, TURMAS, CORES_TURMA
+  - `src/context/AuthContext.jsx` — user + turma state
+  - `src/hooks/useParadas.js` — Firestore real-time listener, CRUD
+  - `src/utils/formatters.js` — date/duration formatters
+  - `src/utils/pdfExport.js` — jsPDF period report
+  - `src/components/` — Icon (Material Symbols), Toast, BottomNav
+  - `src/pages/` — Login, SelecaoTurma, app/NovaParada, app/Lista, app/Painel
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
