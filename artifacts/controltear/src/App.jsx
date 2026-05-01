@@ -3,12 +3,13 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastContainer } from "./components/Toast.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import Login from "./pages/Login.jsx";
+import Cadastro from "./pages/Cadastro.jsx";
 import SelecaoTurma from "./pages/SelecaoTurma.jsx";
 import NovaParada from "./pages/app/NovaParada.jsx";
 import Lista from "./pages/app/Lista.jsx";
 import Painel from "./pages/app/Painel.jsx";
 import Icon from "./components/Icon.jsx";
-import { CORES_TURMA } from "./constants.js";
+import { CORES_TURMA, TURMAS, CORES_TURMA as CT } from "./constants.js";
 
 function Header({ turma, onChangeTurma, onLogout, userName }) {
   const cores = CORES_TURMA[turma] || {};
@@ -48,6 +49,7 @@ function AppShell() {
   const { user, turma, loading, logout, selecionarTurma } = useAuth();
   const [page, setPage] = useState("nova");
   const [changingTurma, setChangingTurma] = useState(false);
+  const [telaAuth, setTelaAuth] = useState("login"); // "login" | "cadastro"
 
   if (loading) {
     return (
@@ -57,7 +59,16 @@ function AppShell() {
     );
   }
 
-  if (!user) return <Login />;
+  if (!user) {
+    if (telaAuth === "cadastro") {
+      return <Cadastro onIrLogin={() => setTelaAuth("login")} />;
+    }
+    return (
+      <Login
+        onIrCadastro={() => setTelaAuth("cadastro")}
+      />
+    );
+  }
 
   if (!turma || changingTurma) {
     return (
@@ -127,8 +138,6 @@ function SelecaoTurmaWrapper({ onSelect, showBack, onBack }) {
     </div>
   );
 }
-
-import { TURMAS, CORES_TURMA as CT } from "./constants.js";
 
 function SelecaoTurmaInner({ onSelect }) {
   return (

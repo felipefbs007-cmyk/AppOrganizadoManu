@@ -49,3 +49,9 @@ export function toDateObject(timestamp) {
   if (timestamp?.seconds) return new Date(timestamp.seconds * 1000);
   return new Date(timestamp);
 }
+export function calcularDuracao(inicio, fim) {
+  if (!inicio || !fim) return null;
+  const s = inicio?.toDate ? inicio.toDate() : new Date(inicio.seconds * 1000);
+  const f = fim?.toDate ? fim.toDate() : new Date(fim.seconds * 1000);
+  return (f - s) / 60000;
+}

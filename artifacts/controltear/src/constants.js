@@ -1,39 +1,36 @@
 export const MOTIVOS = [
-  "Falta de Fio",
-  "Quebra de Fio",
-  "Troca de Fio",
-  "Manutenção Preventiva",
-  "Manutenção Corretiva",
-  "Ajuste de Máquina",
-  "Troca de Pente",
-  "Troca de Liço",
-  "Problema Elétrico",
-  "Problema Mecânico",
-  "Falta de Operador",
-  "Refeição/Intervalo",
-  "Reunião",
-  "Limpeza",
-  "Troca de Artigo",
-  "Revisão de Qualidade",
-  "Falta de Energia",
-  "Outros",
+  "Falha Mecânica",
+  "Falha Elétrica",
+  "Falta de Material",
+  "Setup / Troca",
+  "Ajuste Fino",
+  "Outro",
 ];
 
 export const CARGOS = [
   "Tecelão",
-  "Auxiliar de Tecelão",
+  "Ajudante",
+  "Contramestre",
+  "Tc Líder",
   "Supervisor",
-  "Mecânico",
-  "Eletricista",
-  "Operador",
-  "Líder de Turma",
 ];
 
-export const TURMAS = ["Turma A", "Turma B", "Turma C", "Turma D"];
+export const TURMAS = ["Turma A", "Turma B", "Turma C"];
+
+export const TURMAS_INFO = {
+  "Turma A": { horario: "05:15 – 13:45" },
+  "Turma B": { horario: "13:45 – 22:05" },
+  "Turma C": { horario: "22:05 – 05:15" },
+};
 
 export const CORES_TURMA = {
   "Turma A": { bg: "bg-blue-900/30", border: "border-blue-700", text: "text-blue-400", dot: "bg-blue-400" },
   "Turma B": { bg: "bg-emerald-900/30", border: "border-emerald-700", text: "text-emerald-400", dot: "bg-emerald-400" },
   "Turma C": { bg: "bg-amber-900/30", border: "border-amber-700", text: "text-amber-400", dot: "bg-amber-400" },
-  "Turma D": { bg: "bg-purple-900/30", border: "border-purple-700", text: "text-purple-400", dot: "bg-purple-400" },
 };
+
+// Cargos que podem ver o Painel e gerar PDF
+export const CARGOS_PAINEL = ["Contramestre", "Tc Líder"];
+
+// Cargos que podem editar, deletar e finalizar paradas
+export const CARGOS_GESTAO = ["Contramestre", "Tc Líder", "Supervisor"];
