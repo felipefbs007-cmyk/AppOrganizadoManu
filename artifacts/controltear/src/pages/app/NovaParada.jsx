@@ -5,13 +5,12 @@ import { MOTIVOS } from "../../constants.js";
 import Icon from "../../components/Icon.jsx";
 import { showToast } from "../../components/Toast.jsx";
 
-const MAQUINAS = Array.from({ length: 30 }, (_, i) => `Tear ${String(i + 1).padStart(2, "0")}`);
-
-function Campo({ label, children }) {
+function Campo({ label, children, erro }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-xs text-gray-400 font-medium uppercase tracking-wider">{label}</label>
       {children}
+      {erro && <p className="text-red-400 text-xs">{erro}</p>}
     </div>
   );
 }
@@ -22,56 +21,49 @@ const inputCls = `w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3
 
 export default function NovaParada({ paradaParaEditar, onFinish }) {
   const { user, turma } = useAuth();
-  const { salvarParada, editarParada } = useParadas(turma);
+  const hoje = new Date().toISOString().split("T")[0];
+  const { salvarParada, editarParada } = useParadas(turma, hoje);
 
   const editing = !!paradaParaEditar;
 
-  const [form, setForm] = useState({
-    maquina: paradaParaEditar?.maquina || "",
-    motivo: paradaParaEditar?.motivo || "",
-    operador: paradaParaEditar?.operador || user?.nome || "",
-    duracao: paradaParaEditar?.duracao !== undefined ? String(paradaParaEditar.duracao) : "",
-    observacao: paradaParaEditar?.observacao || "",
-  });
+  // Converte Timestamp para string datetime-local
+  const tsToInput = (ts) => {
+    if (!ts) return "";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  };
+
+  const [numTear, setNumTear] = useState(paradaParaEditar?.numTear || "");
+  const [motivo, setMotivo] = useState(paradaParaEditar?.motivo || MOTIVOS[0]);
+  const [obs, setObs] = useState(paradaParaEditar?.observacao || "");
+  const [horaInicio, setHoraInicio] = useState(tsToInput(paradaParaEditar?.inicio));
+  const [horaFim, setHoraFim] = useState(tsToInput(paradaParaEditar?.fim));
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [erros, setErros] = useState({});
 
-  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
-
-  const validate = () => {
-    const errs = {};
-    if (!form.maquina) errs.maquina = "Selecione a máquina.";
-    if (!form.motivo) errs.motivo = "Selecione o motivo.";
-    if (!form.operador.trim()) errs.operador = "Informe o operador.";
-    if (!form.duracao || isNaN(Number(form.duracao)) || Number(form.duracao) <= 0)
-      errs.duracao = "Informe uma duração válida (em minutos).";
-    return errs;
+  const validar = () => {
+    const e = {};
+    if (!numTear) e.numTear = "Informe o número do tear.";
+    if (editing && !horaInicio) e.horaInicio = "Informe o horário de início.";
+    return e;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) return setErrors(errs);
-    setErrors({});
+    const e2 = validar();
+    if (Object.keys(e2).length) return setErros(e2);
+    setErros({});
     setLoading(true);
     try {
-      const dados = {
-        maquina: form.maquina,
-        motivo: form.motivo,
-        operador: form.operador.trim(),
-        duracao: Number(form.duracao),
-        observacao: form.observacao.trim(),
-        turma,
-        registradoPor: user?.nome,
-        cargo: user?.cargo,
-      };
       if (editing) {
-        await editarParada(paradaParaEditar.id, dados);
+        await editarParada(paradaParaEditar.id, { numTear, motivo, observacao: obs, horaInicio, horaFim });
         showToast("Parada atualizada!", "success");
       } else {
-        await salvarParada(dados);
+        await salvarParada({ numTear, motivo, observacao: obs, operador: user?.nome, data: hoje });
         showToast("Parada registrada!", "success");
-        setForm({ maquina: "", motivo: "", operador: user?.nome || "", duracao: "", observacao: "" });
+        setNumTear(""); setObs("");
       }
       if (onFinish) onFinish();
     } catch (err) {
@@ -94,54 +86,68 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
             <h2 className="text-xl font-bold text-white">
               {editing ? "Editar Parada" : "Nova Parada"}
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">{turma}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{turma} · {user?.nome}</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Campo label="Máquina (Tear)">
-            <select value={form.maquina} onChange={set("maquina")} className={inputCls}>
-              <option value="">Selecione o tear</option>
-              {MAQUINAS.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
-            {errors.maquina && <p className="text-red-400 text-xs mt-1">{errors.maquina}</p>}
+
+          {/* Tear */}
+          <Campo label="Número do Tear" erro={erros.numTear}>
+            <div className="relative">
+              <Icon name="settings_input_component" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="number"
+                value={numTear}
+                onChange={(e) => setNumTear(e.target.value)}
+                placeholder="Ex: 42"
+                className={`${inputCls} pl-9`}
+              />
+            </div>
           </Campo>
 
+          {/* Motivo */}
           <Campo label="Motivo da Parada">
-            <select value={form.motivo} onChange={set("motivo")} className={inputCls}>
-              <option value="">Selecione o motivo</option>
-              {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
-            {errors.motivo && <p className="text-red-400 text-xs mt-1">{errors.motivo}</p>}
+            <div className="relative">
+              <Icon name="error_outline" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <select
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                className={`${inputCls} pl-9 appearance-none`}
+              >
+                {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <Icon name="expand_more" size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            </div>
           </Campo>
 
-          <Campo label="Operador Responsável">
-            <input
-              type="text"
-              value={form.operador}
-              onChange={set("operador")}
-              placeholder="Nome do operador"
-              className={inputCls}
-            />
-            {errors.operador && <p className="text-red-400 text-xs mt-1">{errors.operador}</p>}
-          </Campo>
+          {/* Campos de edição de horário — só no modo editar */}
+          {editing && (
+            <>
+              <Campo label="Horário de Início" erro={erros.horaInicio}>
+                <input
+                  type="datetime-local"
+                  value={horaInicio}
+                  onChange={(e) => setHoraInicio(e.target.value)}
+                  className={inputCls}
+                />
+              </Campo>
+              <Campo label="Horário de Fim">
+                <input
+                  type="datetime-local"
+                  value={horaFim}
+                  onChange={(e) => setHoraFim(e.target.value)}
+                  className={inputCls}
+                />
+              </Campo>
+            </>
+          )}
 
-          <Campo label="Duração (minutos)">
-            <input
-              type="number"
-              min="1"
-              value={form.duracao}
-              onChange={set("duracao")}
-              placeholder="Ex: 30"
-              className={inputCls}
-            />
-            {errors.duracao && <p className="text-red-400 text-xs mt-1">{errors.duracao}</p>}
-          </Campo>
-
+          {/* Observação */}
           <Campo label="Observação (opcional)">
             <textarea
-              value={form.observacao}
-              onChange={set("observacao")}
+              value={obs}
+              onChange={(e) => setObs(e.target.value)}
               placeholder="Detalhes adicionais..."
               rows={3}
               className={`${inputCls} resize-none`}
@@ -154,11 +160,10 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
             className="mt-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold
               rounded-xl py-3.5 transition-colors flex items-center justify-center gap-2"
           >
-            {loading ? (
-              <Icon name="progress_activity" size={20} className="animate-spin" />
-            ) : (
-              <Icon name={editing ? "save" : "add_circle"} size={20} />
-            )}
+            {loading
+              ? <Icon name="progress_activity" size={20} className="animate-spin" />
+              : <Icon name={editing ? "save" : "add_circle"} size={20} />
+            }
             {loading ? "Salvando..." : editing ? "Salvar Alterações" : "Registrar Parada"}
           </button>
         </form>

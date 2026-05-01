@@ -1,57 +1,34 @@
-export function formatarDataHora(timestamp) {
-  if (!timestamp) return "—";
-  let date;
-  if (timestamp?.toDate) {
-    date = timestamp.toDate();
-  } else if (timestamp?.seconds) {
-    date = new Date(timestamp.seconds * 1000);
-  } else {
-    date = new Date(timestamp);
-  }
-  return date.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// Formata Timestamp do Firestore para data/hora legível
+export function formatarDataHora(ts) {
+  if (!ts) return "—";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return (
+    d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) +
+    " " +
+    d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 
-export function formatarData(timestamp) {
-  if (!timestamp) return "—";
-  let date;
-  if (timestamp?.toDate) {
-    date = timestamp.toDate();
-  } else if (timestamp?.seconds) {
-    date = new Date(timestamp.seconds * 1000);
-  } else {
-    date = new Date(timestamp);
-  }
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+// Formata minutos para "Xh YYmin"
+export function formatarMinutosParaHoras(min) {
+  if (!min || min <= 0) return "—";
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  return `${h}h ${String(m).padStart(2, "0")}min`;
 }
 
-export function formatarMinutosParaHoras(minutos) {
-  if (!minutos && minutos !== 0) return "—";
-  const h = Math.floor(minutos / 60);
-  const m = minutos % 60;
-  if (h === 0) return `${m}min`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}min`;
+// Converte Timestamp ou string de data para objeto Date
+export function toDateObject(ts) {
+  if (!ts) return null;
+  if (ts.toDate) return ts.toDate();
+  if (typeof ts === "string") return new Date(ts);
+  return null;
 }
 
-export function toDateObject(timestamp) {
-  if (!timestamp) return null;
-  if (timestamp?.toDate) return timestamp.toDate();
-  if (timestamp?.seconds) return new Date(timestamp.seconds * 1000);
-  return new Date(timestamp);
-}
+// Calcula duração em minutos entre dois Timestamps
 export function calcularDuracao(inicio, fim) {
   if (!inicio || !fim) return null;
-  const s = inicio?.toDate ? inicio.toDate() : new Date(inicio.seconds * 1000);
-  const f = fim?.toDate ? fim.toDate() : new Date(fim.seconds * 1000);
+  const s = inicio.toDate ? inicio.toDate() : new Date(inicio);
+  const f = fim.toDate ? fim.toDate() : new Date(fim);
   return (f - s) / 60000;
 }
