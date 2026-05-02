@@ -98,9 +98,11 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
               <Icon name="settings_input_component" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="number"
+                min="1"
+                max="17"
                 value={numTear}
                 onChange={(e) => setNumTear(e.target.value)}
-                placeholder="Ex: 42"
+                placeholder="Ex: 17"
                 className={`${inputCls} pl-9`}
               />
             </div>
