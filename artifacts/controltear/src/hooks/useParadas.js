@@ -2,9 +2,22 @@ import { useState, useEffect, useRef } from "react";
 import {
   collection, query, where, onSnapshot,
   addDoc, updateDoc, deleteDoc, doc,
-  Timestamp, or, getDocs,
+  Timestamp, or, getDocs, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase.js";
+
+async function enfileirarNotificacao({ titulo, corpo, dados }) {
+  try {
+    await addDoc(collection(db, "notification_requests"), {
+      notification: { title: titulo, body: corpo },
+      data: dados || {},
+      createdAt: serverTimestamp(),
+      status: "pending",
+    });
+  } catch (err) {
+    console.warn("Falha ao enfileirar notificação:", err.message);
+  }
+}
 
 export function useParadas(turma, dataFiltro) {
   const [paradas, setParadas] = useState([]);
@@ -22,7 +35,6 @@ export function useParadas(turma, dataFiltro) {
     setLoading(true);
     isFirstRun.current = true;
 
-    // Escuta paradas da data selecionada OU paradas abertas de qualquer turma
     const q = query(
       collection(db, "paradas"),
       or(
@@ -34,7 +46,6 @@ export function useParadas(turma, dataFiltro) {
     const unsub = onSnapshot(q, (snapshot) => {
       const dados = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Notificação de nova parada de outro operador
       if (!isFirstRun.current) {
         const novas = snapshot.docChanges().filter((c) => c.type === "added");
         if (novas.length > 0) {
@@ -51,7 +62,6 @@ export function useParadas(turma, dataFiltro) {
     return () => unsub();
   }, [turma, dataFiltro]);
 
-  // Registrar nova parada (status aberta)
   const salvarParada = async ({ numTear, motivo, observacao, operador, data }) => {
     await addDoc(collection(db, "paradas"), {
       numTear,
@@ -64,9 +74,14 @@ export function useParadas(turma, dataFiltro) {
       inicio: Timestamp.now(),
       fim: null,
     });
+
+    enfileirarNotificacao({
+      titulo: `⚠️ Nova parada — ${turma}`,
+      corpo: `Tear ${numTear} parado por: ${motivo}. Operador: ${operador}.`,
+      dados: { turma, numTear, motivo, operador, data },
+    });
   };
 
-  // Editar parada existente
   const editarParada = async (id, { numTear, motivo, observacao, horaInicio, horaFim }) => {
     const updateObj = {
       numTear,
@@ -81,7 +96,6 @@ export function useParadas(turma, dataFiltro) {
     await updateDoc(doc(db, "paradas", id), updateObj);
   };
 
-  // Finalizar parada (marcar fim agora)
   const finalizarParada = async (id) => {
     await updateDoc(doc(db, "paradas", id), {
       status: "finalizada",
@@ -89,12 +103,10 @@ export function useParadas(turma, dataFiltro) {
     });
   };
 
-  // Excluir parada
   const excluirParada = async (id) => {
     await deleteDoc(doc(db, "paradas", id));
   };
 
-  // Buscar paradas por período (para PDF)
   const buscarPorPeriodo = async (dataInicio, dataFim) => {
     const q = query(
       collection(db, "paradas"),

@@ -1,9 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
+import { requestPermission, getToken, saveToken } from "../notifications.js";
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = "controltear_user";
+
+async function registrarToken(userId) {
+  try {
+    const permission = await requestPermission();
+    if (permission === "granted") {
+      const token = await getToken();
+      if (token) await saveToken(userId, token);
+    }
+  } catch (err) {
+    console.warn("FCM token registration skipped:", err.message);
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -24,7 +37,6 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // Login verifica nome + senha no Firestore
   const login = async (nome, senha, manter) => {
     const q = query(
       collection(db, "usuarios"),
@@ -40,12 +52,13 @@ export function AuthProvider({ children }) {
     if (manter) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: userData, turma: null }));
     }
+
+    registrarToken(userData.id);
+
     return userData;
   };
 
-  // Cadastro salva na coleção usuarios
   const cadastrar = async (nome, senha, funcao) => {
-    // Verifica se nome já existe
     const q = query(collection(db, "usuarios"), where("nome", "==", nome));
     const snap = await getDocs(q);
     if (!snap.empty) throw new Error("Este nome de usuário já existe!");
@@ -60,6 +73,9 @@ export function AuthProvider({ children }) {
     setUser(userData);
     setTurma(null);
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: userData, turma: null }));
+
+    registrarToken(userData.id);
+
     return userData;
   };
 
