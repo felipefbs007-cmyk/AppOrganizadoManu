@@ -9,31 +9,8 @@ import NovaParada from "./pages/app/NovaParada.jsx";
 import Lista from "./pages/app/Lista.jsx";
 import Painel from "./pages/app/Painel.jsx";
 import Icon from "./components/Icon.jsx";
+import OfflineIndicator from "./components/OfflineIndicator.jsx";
 import { CORES_TURMA, TURMAS, CORES_TURMA as CT } from "./constants.js";
-import { onMessageListener } from "./notifications.js";
-
-function useForegroundNotifications() {
-  useEffect(() => {
-    let active = true;
-
-    const listen = async () => {
-      try {
-        while (active) {
-          const payload = await onMessageListener();
-          if (!active) break;
-          const title = payload?.notification?.title || "ControlTear";
-          const body = payload?.notification?.body || "Nova parada registrada.";
-          showToast(`${title}: ${body}`, "info");
-        }
-      } catch (err) {
-        console.warn("FCM foreground listener error:", err?.message);
-      }
-    };
-
-    listen();
-    return () => { active = false; };
-  }, []);
-}
 
 function Header({ turma, onChangeTurma, onLogout, userName }) {
   const cores = CORES_TURMA[turma] || {};
@@ -75,8 +52,6 @@ function AppShell() {
   const [changingTurma, setChangingTurma] = useState(false);
   const [telaAuth, setTelaAuth] = useState("login");
 
-  useForegroundNotifications();
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -90,9 +65,7 @@ function AppShell() {
       return <Cadastro onIrLogin={() => setTelaAuth("login")} />;
     }
     return (
-      <Login
-        onIrCadastro={() => setTelaAuth("cadastro")}
-      />
+      <Login onIrCadastro={() => setTelaAuth("cadastro")} />
     );
   }
 
@@ -121,6 +94,7 @@ function AppShell() {
         onChangeTurma={() => setChangingTurma(true)}
         onLogout={logout}
       />
+      <OfflineIndicator />
       <main className="flex-1 overflow-hidden flex flex-col">
         {renderPage()}
       </main>
