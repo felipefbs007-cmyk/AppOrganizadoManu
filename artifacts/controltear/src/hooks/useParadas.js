@@ -6,10 +6,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase.js";
 
-// --- INTEGRAÇÃO COM TELEGRAM ---
+// --- INTEGRAÇÃO COM TELEGRAM (GRUPO DA EMPRESA) ---
 const enviarTelegram = async (parada, turma) => {
   const TOKEN = "7682222110:AAHGl8dp5fCeMrhKhWpGCqtXR5hqSNYAtas";
-  const CHAT_ID = "1106718687"; 
+  const CHAT_ID = "-1003929994601"; // ID do seu grupo configurado!
 
   const mensagem = `🚨 *NOVA PARADA REGISTRADA*\n\n` +
                    `📟 *Tear:* ${parada.numMáquina || parada.numTear}\n` +
@@ -28,9 +28,9 @@ const enviarTelegram = async (parada, turma) => {
         parse_mode: "Markdown"
       })
     });
-    console.log("✅ Telegram notificado!");
+    console.log("✅ Alerta enviado para o grupo do Telegram!");
   } catch (err) {
-    console.warn("❌ Falha ao enviar Telegram:", err.message);
+    console.warn("❌ Falha ao enviar para o grupo:", err.message);
   }
 };
 
@@ -50,7 +50,6 @@ export function useParadas(turma, dataFiltro) {
     setLoading(true);
     isFirstRun.current = true;
 
-    // Monitora paradas da data selecionada OU que ainda estão abertas
     const q = query(
       collection(db, "paradas"),
       or(
@@ -62,12 +61,11 @@ export function useParadas(turma, dataFiltro) {
     const unsub = onSnapshot(q, (snapshot) => {
       const dados = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Monitoramento em tempo real para notificações visuais
       if (!isFirstRun.current) {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added" && !snapshot.metadata.fromCache) {
             const nova = change.doc.data();
-            // Dispara evento para o Banner Azul no App.tsx
+            // Notificação visual no App (Banner Azul)
             window.dispatchEvent(new CustomEvent("notificar-parada", { detail: nova }));
             setNovaParadaEvento(nova);
           }
@@ -82,7 +80,6 @@ export function useParadas(turma, dataFiltro) {
     return () => unsub();
   }, [turma, dataFiltro]);
 
-  // --- FUNÇÃO PARA SALVAR E NOTIFICAR ---
   const salvarParada = async ({ numMáquina, motivo, observacao, operador, data }) => {
     const dadosParada = {
       numMáquina,
@@ -99,7 +96,7 @@ export function useParadas(turma, dataFiltro) {
     // 1. Salva no Firebase
     await addDoc(collection(db, "paradas"), dadosParada);
 
-    // 2. Dispara Telegram
+    // 2. Dispara para o Grupo do Telegram
     enviarTelegram(dadosParada, turma);
   };
 
