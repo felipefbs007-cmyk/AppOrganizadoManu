@@ -42,7 +42,6 @@ export default function Painel() {
 
   const { paradas, loading } = useParadas(turma, dataFiltro);
 
-  // Bloqueia acesso se não tiver permissão
   if (!CARGOS_PAINEL.includes(user?.funcao)) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center">
@@ -52,7 +51,6 @@ export default function Painel() {
     );
   }
 
-  // ── cálculos ──
   const paradasHoje = paradas.filter((p) => p.data === dataFiltro);
   const abertas = paradas.filter((p) => p.status === "aberta");
   const finalizadas = paradasHoje.filter((p) => p.status === "finalizada");
@@ -62,31 +60,33 @@ export default function Painel() {
     return acc + (dur || 0);
   }, 0);
 
-  // Máquina mais parado hoje
-  const contMáquina = {};
-  paradasHoje.forEach((p) => { contMáquina[p.numMáquina] = (contMáquina[p.numMáquina] || 0) + 1; });
-  const topMáquina = Object.entries(contMáquina).sort((a, b) => b[1] - a[1])[0];
+  // Usa numTear (campo correto no Firebase)
+  const contMaquina = {};
+  paradasHoje.forEach((p) => {
+    const num = p.numTear;
+    if (num) contMaquina[num] = (contMaquina[num] || 0) + 1;
+  });
+  const topMaquina = Object.entries(contMaquina).sort((a, b) => b[1] - a[1])[0];
 
-  // Ranking motivos
   const contMotivo = {};
   paradasHoje.forEach((p) => { contMotivo[p.motivo] = (contMotivo[p.motivo] || 0) + 1; });
   const rankMotivos = Object.entries(contMotivo).sort((a, b) => b[1] - a[1]);
   const maxMotivo = rankMotivos[0]?.[1] || 1;
 
-  // Top 5 máquinaes por quantidade
-  const minsPorMáquina = {};
+  const minsPorMaquina = {};
   paradasHoje.forEach((p) => {
-    if (!minsPorMáquina[p.numMáquina]) minsPorMáquina[p.numMáquina] = { count: 0, mins: 0 };
-    minsPorMáquina[p.numMáquina].count++;
+    const num = p.numTear;
+    if (!num) return;
+    if (!minsPorMaquina[num]) minsPorMaquina[num] = { count: 0, mins: 0 };
+    minsPorMaquina[num].count++;
     const dur = calcularDuracao(p.inicio, p.fim);
-    minsPorMáquina[p.numMáquina].mins += dur || 0;
+    minsPorMaquina[num].mins += dur || 0;
   });
-  const rankMáquinaes = Object.entries(minsPorMáquina)
+  const rankMaquinas = Object.entries(minsPorMaquina)
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 5);
-  const maxMáquinaCount = rankMáquinaes[0]?.[1].count || 1;
+  const maxMaquinaCount = rankMaquinas[0]?.[1].count || 1;
 
-  // Comparativo por turma
   const porTurma = {};
   TURMAS.forEach((t) => { porTurma[t] = 0; });
   paradas.filter((p) => p.data === dataFiltro).forEach((p) => {
@@ -94,7 +94,6 @@ export default function Painel() {
   });
   const maxTurma = Math.max(...Object.values(porTurma), 1);
 
-  // Últimas 6 finalizadas hoje
   const timeline = [...paradasHoje]
     .filter((p) => p.fim)
     .sort((a, b) => b.fim?.seconds - a.fim?.seconds)
@@ -104,7 +103,6 @@ export default function Painel() {
     <div className="flex-1 overflow-y-auto">
       <div className="px-4 pt-6 pb-28 max-w-lg mx-auto flex flex-col gap-4">
 
-        {/* Cabeçalho */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white">Painel</h2>
@@ -112,7 +110,6 @@ export default function Painel() {
           </div>
         </div>
 
-        {/* Seletor de data */}
         <div className="relative">
           <Icon name="calendar_today" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
@@ -130,39 +127,13 @@ export default function Painel() {
           </div>
         ) : (
           <>
-            {/* 4 Cards resumo */}
             <div className="grid grid-cols-2 gap-3">
-              <StatCard
-                icon="format_list_numbered"
-                label="Paradas Hoje"
-                value={paradasHoje.length}
-                sub={`${finalizadas.length} finaliz. · ${abertas.length} abertas`}
-                color="text-blue-400"
-              />
-              <StatCard
-                icon="schedule"
-                label="Horas Paradas"
-                value={minHoje > 0 ? formatarMinutosParaHoras(minHoje) : "—"}
-                sub="somente hoje"
-                color="text-amber-400"
-              />
-              <StatCard
-                icon="warning"
-                label="Abertas Agora"
-                value={abertas.length}
-                sub="todos os turnos"
-                color="text-red-400"
-              />
-              <StatCard
-                icon="star"
-                label="Máquina Crítico"
-                value={topMáquina ? `#${topMáquina[0]}` : "—"}
-                sub={topMáquina ? `${topMáquina[1]} parada(s)` : "nenhuma hoje"}
-                color="text-amber-400"
-              />
+              <StatCard icon="format_list_numbered" label="Paradas Hoje" value={paradasHoje.length} sub={`${finalizadas.length} finaliz. · ${abertas.length} abertas`} color="text-blue-400" />
+              <StatCard icon="schedule" label="Horas Paradas" value={minHoje > 0 ? formatarMinutosParaHoras(minHoje) : "—"} sub="somente hoje" color="text-amber-400" />
+              <StatCard icon="warning" label="Abertas Agora" value={abertas.length} sub="todos os turnos" color="text-red-400" />
+              <StatCard icon="star" label="Máquina Crítica" value={topMaquina ? `#${topMaquina[0]}` : "—"} sub={topMaquina ? `${topMaquina[1]} parada(s)` : "nenhuma hoje"} color="text-amber-400" />
             </div>
 
-            {/* Ranking motivos */}
             {rankMotivos.length > 0 && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -177,32 +148,23 @@ export default function Painel() {
               </div>
             )}
 
-            {/* Top 5 máquinaes */}
-            {rankMáquinaes.length > 0 && (
+            {rankMaquinas.length > 0 && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Icon name="leaderboard" size={16} className="text-gray-500" />
-                  <h3 className="text-sm font-semibold text-gray-300">Top 5 Máquinaes</h3>
+                  <h3 className="text-sm font-semibold text-gray-300">Top 5 Máquinas</h3>
                 </div>
                 <div className="flex flex-col gap-3">
-                  {rankMáquinaes.map(([máquina, info], idx) => (
-                    <div key={máquina} className="flex items-center gap-3">
-                      <span className={`text-xs font-bold w-5 text-center ${
-                        idx === 0 ? "text-amber-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-700" : "text-gray-600"
-                      }`}>#{idx + 1}</span>
+                  {rankMaquinas.map(([maquina, info], idx) => (
+                    <div key={maquina} className="flex items-center gap-3">
+                      <span className={`text-xs font-bold w-5 text-center ${idx === 0 ? "text-amber-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-700" : "text-gray-600"}`}>#{idx + 1}</span>
                       <div className="flex-1">
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="text-gray-300 font-bold">Máquina {máquina}</span>
+                          <span className="text-gray-300 font-bold">Máquina {maquina}</span>
                           <span className="text-gray-500">{info.count} par. · {formatarMinutosParaHoras(info.mins)}</span>
                         </div>
                         <div className="w-full bg-gray-800 rounded-full h-2">
-                          <div
-                            className="h-2 rounded-full transition-all"
-                            style={{
-                              width: `${(info.count / maxMáquinaCount) * 100}%`,
-                              background: idx === 0 ? "#f59e0b" : idx === 1 ? "#94a3b8" : idx === 2 ? "#b45309" : "#44474d"
-                            }}
-                          />
+                          <div className="h-2 rounded-full transition-all" style={{ width: `${(info.count / maxMaquinaCount) * 100}%`, background: idx === 0 ? "#f59e0b" : idx === 1 ? "#94a3b8" : idx === 2 ? "#b45309" : "#44474d" }} />
                         </div>
                       </div>
                     </div>
@@ -211,7 +173,6 @@ export default function Painel() {
               </div>
             )}
 
-            {/* Comparativo por turma */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Icon name="groups" size={16} className="text-gray-500" />
@@ -221,22 +182,13 @@ export default function Painel() {
                 {Object.entries(porTurma).map(([t, count]) => (
                   <div key={t} className="flex-1 flex flex-col items-center gap-1">
                     <span className="text-xs font-bold text-gray-300">{count}</span>
-                    <div
-                      className="w-full rounded-t-md transition-all"
-                      style={{
-                        height: `${Math.max((count / maxTurma) * 72, count > 0 ? 8 : 2)}px`,
-                        background: t === turma ? "#3b82f6" : "#334155"
-                      }}
-                    />
-                    <span className={`text-[10px] font-bold uppercase ${t === turma ? "text-blue-400" : "text-gray-600"}`}>
-                      {t.replace("Turma ", "T")}
-                    </span>
+                    <div className="w-full rounded-t-md transition-all" style={{ height: `${Math.max((count / maxTurma) * 72, count > 0 ? 8 : 2)}px`, background: t === turma ? "#3b82f6" : "#334155" }} />
+                    <span className={`text-[10px] font-bold uppercase ${t === turma ? "text-blue-400" : "text-gray-600"}`}>{t.replace("Turma ", "T")}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Linha do tempo */}
             {timeline.length > 0 && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -251,7 +203,7 @@ export default function Painel() {
                         <div className="w-1 h-8 rounded-full bg-green-500 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between">
-                            <span className="text-sm font-bold text-white">Máquina {p.numMáquina}</span>
+                            <span className="text-sm font-bold text-white">Máquina {p.numTear}</span>
                             <span className="text-xs text-gray-500 font-mono">{formatarDataHora(p.fim)?.split(" ")[1]}</span>
                           </div>
                           <div className="flex justify-between mt-0.5">
