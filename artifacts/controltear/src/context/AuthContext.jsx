@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
 
 const AuthContext = createContext(null);
-const STORAGE_KEY = "controltear_user";
+const STORAGE_KEY = "controlmáquina_user";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

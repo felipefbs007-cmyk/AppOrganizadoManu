@@ -62,10 +62,10 @@ export default function Painel() {
     return acc + (dur || 0);
   }, 0);
 
-  // Tear mais parado hoje
-  const contTear = {};
-  paradasHoje.forEach((p) => { contTear[p.numTear] = (contTear[p.numTear] || 0) + 1; });
-  const topTear = Object.entries(contTear).sort((a, b) => b[1] - a[1])[0];
+  // Máquina mais parado hoje
+  const contMáquina = {};
+  paradasHoje.forEach((p) => { contMáquina[p.numMáquina] = (contMáquina[p.numMáquina] || 0) + 1; });
+  const topMáquina = Object.entries(contMáquina).sort((a, b) => b[1] - a[1])[0];
 
   // Ranking motivos
   const contMotivo = {};
@@ -73,18 +73,18 @@ export default function Painel() {
   const rankMotivos = Object.entries(contMotivo).sort((a, b) => b[1] - a[1]);
   const maxMotivo = rankMotivos[0]?.[1] || 1;
 
-  // Top 5 teares por quantidade
-  const minsPorTear = {};
+  // Top 5 máquinaes por quantidade
+  const minsPorMáquina = {};
   paradasHoje.forEach((p) => {
-    if (!minsPorTear[p.numTear]) minsPorTear[p.numTear] = { count: 0, mins: 0 };
-    minsPorTear[p.numTear].count++;
+    if (!minsPorMáquina[p.numMáquina]) minsPorMáquina[p.numMáquina] = { count: 0, mins: 0 };
+    minsPorMáquina[p.numMáquina].count++;
     const dur = calcularDuracao(p.inicio, p.fim);
-    minsPorTear[p.numTear].mins += dur || 0;
+    minsPorMáquina[p.numMáquina].mins += dur || 0;
   });
-  const rankTeares = Object.entries(minsPorTear)
+  const rankMáquinaes = Object.entries(minsPorMáquina)
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 5);
-  const maxTearCount = rankTeares[0]?.[1].count || 1;
+  const maxMáquinaCount = rankMáquinaes[0]?.[1].count || 1;
 
   // Comparativo por turma
   const porTurma = {};
@@ -155,9 +155,9 @@ export default function Painel() {
               />
               <StatCard
                 icon="star"
-                label="Tear Crítico"
-                value={topTear ? `#${topTear[0]}` : "—"}
-                sub={topTear ? `${topTear[1]} parada(s)` : "nenhuma hoje"}
+                label="Máquina Crítico"
+                value={topMáquina ? `#${topMáquina[0]}` : "—"}
+                sub={topMáquina ? `${topMáquina[1]} parada(s)` : "nenhuma hoje"}
                 color="text-amber-400"
               />
             </div>
@@ -177,29 +177,29 @@ export default function Painel() {
               </div>
             )}
 
-            {/* Top 5 teares */}
-            {rankTeares.length > 0 && (
+            {/* Top 5 máquinaes */}
+            {rankMáquinaes.length > 0 && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Icon name="leaderboard" size={16} className="text-gray-500" />
-                  <h3 className="text-sm font-semibold text-gray-300">Top 5 Teares</h3>
+                  <h3 className="text-sm font-semibold text-gray-300">Top 5 Máquinaes</h3>
                 </div>
                 <div className="flex flex-col gap-3">
-                  {rankTeares.map(([tear, info], idx) => (
-                    <div key={tear} className="flex items-center gap-3">
+                  {rankMáquinaes.map(([máquina, info], idx) => (
+                    <div key={máquina} className="flex items-center gap-3">
                       <span className={`text-xs font-bold w-5 text-center ${
                         idx === 0 ? "text-amber-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-700" : "text-gray-600"
                       }`}>#{idx + 1}</span>
                       <div className="flex-1">
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="text-gray-300 font-bold">Tear {tear}</span>
+                          <span className="text-gray-300 font-bold">Máquina {máquina}</span>
                           <span className="text-gray-500">{info.count} par. · {formatarMinutosParaHoras(info.mins)}</span>
                         </div>
                         <div className="w-full bg-gray-800 rounded-full h-2">
                           <div
                             className="h-2 rounded-full transition-all"
                             style={{
-                              width: `${(info.count / maxTearCount) * 100}%`,
+                              width: `${(info.count / maxMáquinaCount) * 100}%`,
                               background: idx === 0 ? "#f59e0b" : idx === 1 ? "#94a3b8" : idx === 2 ? "#b45309" : "#44474d"
                             }}
                           />
@@ -251,7 +251,7 @@ export default function Painel() {
                         <div className="w-1 h-8 rounded-full bg-green-500 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between">
-                            <span className="text-sm font-bold text-white">Tear {p.numTear}</span>
+                            <span className="text-sm font-bold text-white">Máquina {p.numMáquina}</span>
                             <span className="text-xs text-gray-500 font-mono">{formatarDataHora(p.fim)?.split(" ")[1]}</span>
                           </div>
                           <div className="flex justify-between mt-0.5">

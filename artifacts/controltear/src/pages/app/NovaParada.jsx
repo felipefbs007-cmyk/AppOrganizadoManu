@@ -35,7 +35,7 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
       .slice(0, 16);
   };
 
-  const [numTear, setNumTear] = useState(paradaParaEditar?.numTear || "");
+  const [numMáquina, setNumMáquina] = useState(paradaParaEditar?.numMáquina || "");
   const [motivo, setMotivo] = useState(paradaParaEditar?.motivo || MOTIVOS[0]);
   const [obs, setObs] = useState(paradaParaEditar?.observacao || "");
   const [horaInicio, setHoraInicio] = useState(tsToInput(paradaParaEditar?.inicio));
@@ -45,7 +45,7 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
 
   const validar = () => {
     const e = {};
-    if (!numTear) e.numTear = "Informe o número do tear.";
+    if (!numMáquina) e.numMáquina = "Informe o número do máquina.";
     if (editing && !horaInicio) e.horaInicio = "Informe o horário de início.";
     return e;
   };
@@ -58,12 +58,12 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
     setLoading(true);
     try {
       if (editing) {
-        await editarParada(paradaParaEditar.id, { numTear, motivo, observacao: obs, horaInicio, horaFim });
+        await editarParada(paradaParaEditar.id, { numMáquina, motivo, observacao: obs, horaInicio, horaFim });
         showToast("Parada atualizada!", "success");
       } else {
-        await salvarParada({ numTear, motivo, observacao: obs, operador: user?.nome, data: hoje });
+        await salvarParada({ numMáquina, motivo, observacao: obs, operador: user?.nome, data: hoje });
         showToast("Parada registrada!", "success");
-        setNumTear(""); setObs("");
+        setNumMáquina(""); setObs("");
       }
       if (onFinish) onFinish();
     } catch (err) {
@@ -92,16 +92,16 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-          {/* Tear */}
-          <Campo label="Número da Máquina" erro={erros.numTear}>
+          {/* Máquina */}
+          <Campo label="Número da Máquina" erro={erros.numMáquina}>
             <div className="relative">
               <Icon name="settings_input_component" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="number"
                 min="1"
                 max="17"
-                value={numTear}
-                onChange={(e) => setNumTear(e.target.value)}
+                value={numMáquina}
+                onChange={(e) => setNumMáquina(e.target.value)}
                 placeholder="Ex: 17"
                 className={`${inputCls} pl-9`}
               />

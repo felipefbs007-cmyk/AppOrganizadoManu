@@ -37,7 +37,7 @@ export default function Cadastro({ onIrLogin }) {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-900/40">
             <Icon name="precision_manufacturing" size={32} className="text-white" filled />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">ControlTear</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">ControlMáquina</h1>
           <p className="text-gray-500 text-sm mt-1">Criar nova conta</p>
         </div>
 

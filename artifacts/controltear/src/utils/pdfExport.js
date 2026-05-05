@@ -18,7 +18,7 @@ export function gerarPDFPeriodo({ paradas, dataInicio, dataFim }) {
       return `
         <tr>
           <td style="padding:7px 8px;text-align:center">${fmtData(p.data)}</td>
-          <td style="padding:7px 8px;text-align:center;font-weight:bold">${p.numTear}</td>
+          <td style="padding:7px 8px;text-align:center;font-weight:bold">${p.numMáquina}</td>
           <td style="padding:7px 8px;text-align:center">${p.turma}</td>
           <td style="padding:7px 8px">${p.motivo}</td>
           <td style="padding:7px 8px;text-align:center">${formatarDataHora(p.inicio)}</td>
@@ -34,7 +34,7 @@ export function gerarPDFPeriodo({ paradas, dataInicio, dataFim }) {
     <html>
       <head>
         <meta charset="utf-8"/>
-        <title>Relatório ControlTear</title>
+        <title>Relatório ControlMáquina</title>
         <style>
           body { font-family: sans-serif; padding: 24px; color: #111; }
           h2 { text-align: center; margin-bottom: 4px; }
@@ -47,18 +47,18 @@ export function gerarPDFPeriodo({ paradas, dataInicio, dataFim }) {
         </style>
       </head>
       <body>
-        <h2>Relatório de Paradas — ControlTear</h2>
+        <h2>Relatório de Paradas — ControlMáquina</h2>
         <p class="sub">${fmtData(dataInicio)} até ${fmtData(dataFim)} · ${paradas.length} registro(s)</p>
         <table>
           <thead>
             <tr>
-              <th>Data</th><th>Tear</th><th>Turma</th><th>Motivo</th>
+              <th>Data</th><th>Máquina</th><th>Turma</th><th>Motivo</th>
               <th>Início</th><th>Fim</th><th>Duração</th><th>Status</th>
             </tr>
           </thead>
           <tbody>${linhas}</tbody>
         </table>
-        <div class="footer">Gerado em ${new Date().toLocaleString("pt-BR")} · ControlTear</div>
+        <div class="footer">Gerado em ${new Date().toLocaleString("pt-BR")} · ControlMáquina</div>
       </body>
     </html>
   `;

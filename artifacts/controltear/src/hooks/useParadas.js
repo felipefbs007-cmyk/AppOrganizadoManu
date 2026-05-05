@@ -62,9 +62,9 @@ export function useParadas(turma, dataFiltro) {
     return () => unsub();
   }, [turma, dataFiltro]);
 
-  const salvarParada = async ({ numTear, motivo, observacao, operador, data }) => {
+  const salvarParada = async ({ numMáquina, motivo, observacao, operador, data }) => {
     await addDoc(collection(db, "paradas"), {
-      numTear,
+      numMáquina,
       motivo,
       observacao: observacao || "",
       turma,
@@ -77,14 +77,14 @@ export function useParadas(turma, dataFiltro) {
 
     enfileirarNotificacao({
       titulo: `⚠️ Nova parada — ${turma}`,
-      corpo: `Tear ${numTear} parado por: ${motivo}. Operador: ${operador}.`,
-      dados: { turma, numTear, motivo, operador, data },
+      corpo: `Máquina ${numMáquina} parado por: ${motivo}. Operador: ${operador}.`,
+      dados: { turma, numMáquina, motivo, operador, data },
     });
   };
 
-  const editarParada = async (id, { numTear, motivo, observacao, horaInicio, horaFim }) => {
+  const editarParada = async (id, { numMáquina, motivo, observacao, horaInicio, horaFim }) => {
     const updateObj = {
-      numTear,
+      numMáquina,
       motivo,
       observacao: observacao || "",
       inicio: Timestamp.fromDate(new Date(horaInicio)),

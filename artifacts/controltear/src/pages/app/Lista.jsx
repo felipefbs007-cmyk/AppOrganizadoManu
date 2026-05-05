@@ -151,7 +151,7 @@ export default function Lista() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-bold text-sm">TEAR {p.numTear}</span>
+                        <span className="text-white font-bold text-sm">MÁQUINA {p.numMáquina}</span>
                         {isOutraTurma && (
                           <span className="text-[9px] bg-amber-500 text-black font-bold px-2 py-0.5 rounded-full">
                             ABERTA {p.turma}
