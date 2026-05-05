@@ -93,7 +93,7 @@ export default function NovaParada({ paradaParaEditar, onFinish }) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
           {/* Tear */}
-          <Campo label="Número do Tear" erro={erros.numTear}>
+          <Campo label="Número da Máquina" erro={erros.numTear}>
             <div className="relative">
               <Icon name="settings_input_component" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
