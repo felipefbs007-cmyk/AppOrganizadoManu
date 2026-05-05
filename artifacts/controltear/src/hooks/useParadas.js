@@ -6,6 +6,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase.js";
 
+// Função para enviar requisição de notificação push (FCM)
 async function enfileirarNotificacao({ titulo, corpo, dados }) {
   try {
     await addDoc(collection(db, "notification_requests"), {
@@ -46,12 +47,24 @@ export function useParadas(turma, dataFiltro) {
     const unsub = onSnapshot(q, (snapshot) => {
       const dados = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
+      // LOGICA DE NOTIFICAÇÃO MELHORADA
       if (!isFirstRun.current) {
-        const novas = snapshot.docChanges().filter((c) => c.type === "added");
-        if (novas.length > 0) {
-          const nova = novas[0].doc.data();
-          setNovaParadaEvento(nova);
-        }
+        const mudanças = snapshot.docChanges();
+        
+        mudanças.forEach((change) => {
+          // Detecta se alguém ADICIONOU uma parada nova e não veio do cache local
+          if (change.type === "added" && !snapshot.metadata.fromCache) {
+            const nova = change.doc.data();
+            
+            // DISPARA O EVENTO GLOBAL (Para o App.tsx mostrar o banner azul)
+            const evento = new CustomEvent("notificar-parada", { 
+              detail: nova 
+            });
+            window.dispatchEvent(evento);
+            
+            setNovaParadaEvento(nova);
+          }
+        });
       }
 
       setParadas(dados.sort((a, b) => b.inicio?.seconds - a.inicio?.seconds));
@@ -75,6 +88,7 @@ export function useParadas(turma, dataFiltro) {
       fim: null,
     });
 
+    // Enfileira para o sistema de push
     enfileirarNotificacao({
       titulo: `⚠️ Nova parada — ${turma}`,
       corpo: `Máquina ${numMáquina} parado por: ${motivo}. Operador: ${operador}.`,
