@@ -6,19 +6,33 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase.js";
 
-// Função para enviar requisição de notificação push (FCM)
-async function enfileirarNotificacao({ titulo, corpo, dados }) {
+// --- INTEGRAÇÃO COM TELEGRAM ---
+const enviarTelegram = async (parada, turma) => {
+  const TOKEN = "7682222110:AAHGl8dp5fCeMrhKhWpGCqtXR5hqSNYAtas";
+  const CHAT_ID = "1106718687"; 
+
+  const mensagem = `🚨 *NOVA PARADA REGISTRADA*\n\n` +
+                   `📟 *Tear:* ${parada.numMáquina || parada.numTear}\n` +
+                   `🛠️ *Motivo:* ${parada.motivo}\n` +
+                   `👥 *Turma:* ${turma}\n` +
+                   `👤 *Operador:* ${parada.operador}\n` +
+                   `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR')}`;
+
   try {
-    await addDoc(collection(db, "notification_requests"), {
-      notification: { title: titulo, body: corpo },
-      data: dados || {},
-      createdAt: serverTimestamp(),
-      status: "pending",
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: mensagem,
+        parse_mode: "Markdown"
+      })
     });
+    console.log("✅ Telegram notificado!");
   } catch (err) {
-    console.warn("Falha ao enfileirar notificação:", err.message);
+    console.warn("❌ Falha ao enviar Telegram:", err.message);
   }
-}
+};
 
 export function useParadas(turma, dataFiltro) {
   const [paradas, setParadas] = useState([]);
@@ -36,6 +50,7 @@ export function useParadas(turma, dataFiltro) {
     setLoading(true);
     isFirstRun.current = true;
 
+    // Monitora paradas da data selecionada OU que ainda estão abertas
     const q = query(
       collection(db, "paradas"),
       or(
@@ -47,21 +62,13 @@ export function useParadas(turma, dataFiltro) {
     const unsub = onSnapshot(q, (snapshot) => {
       const dados = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // LOGICA DE NOTIFICAÇÃO MELHORADA
+      // Monitoramento em tempo real para notificações visuais
       if (!isFirstRun.current) {
-        const mudanças = snapshot.docChanges();
-        
-        mudanças.forEach((change) => {
-          // Detecta se alguém ADICIONOU uma parada nova e não veio do cache local
+        snapshot.docChanges().forEach((change) => {
           if (change.type === "added" && !snapshot.metadata.fromCache) {
             const nova = change.doc.data();
-            
-            // DISPARA O EVENTO GLOBAL (Para o App.tsx mostrar o banner azul)
-            const evento = new CustomEvent("notificar-parada", { 
-              detail: nova 
-            });
-            window.dispatchEvent(evento);
-            
+            // Dispara evento para o Banner Azul no App.tsx
+            window.dispatchEvent(new CustomEvent("notificar-parada", { detail: nova }));
             setNovaParadaEvento(nova);
           }
         });
@@ -75,8 +82,9 @@ export function useParadas(turma, dataFiltro) {
     return () => unsub();
   }, [turma, dataFiltro]);
 
+  // --- FUNÇÃO PARA SALVAR E NOTIFICAR ---
   const salvarParada = async ({ numMáquina, motivo, observacao, operador, data }) => {
-    await addDoc(collection(db, "paradas"), {
+    const dadosParada = {
       numMáquina,
       motivo,
       observacao: observacao || "",
@@ -86,13 +94,19 @@ export function useParadas(turma, dataFiltro) {
       operador,
       inicio: Timestamp.now(),
       fim: null,
-    });
+    };
 
-    // Enfileira para o sistema de push
-    enfileirarNotificacao({
-      titulo: `⚠️ Nova parada — ${turma}`,
-      corpo: `Máquina ${numMáquina} parado por: ${motivo}. Operador: ${operador}.`,
-      dados: { turma, numMáquina, motivo, operador, data },
+    // 1. Salva no Firebase
+    await addDoc(collection(db, "paradas"), dadosParada);
+
+    // 2. Dispara Telegram
+    enviarTelegram(dadosParada, turma);
+  };
+
+  const finalizarParada = async (id) => {
+    await updateDoc(doc(db, "paradas", id), {
+      status: "finalizada",
+      fim: Timestamp.now(),
     });
   };
 
@@ -108,13 +122,6 @@ export function useParadas(turma, dataFiltro) {
       updateObj.status = "finalizada";
     }
     await updateDoc(doc(db, "paradas", id), updateObj);
-  };
-
-  const finalizarParada = async (id) => {
-    await updateDoc(doc(db, "paradas", id), {
-      status: "finalizada",
-      fim: Timestamp.now(),
-    });
   };
 
   const excluirParada = async (id) => {
