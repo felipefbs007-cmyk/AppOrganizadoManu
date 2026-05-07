@@ -2,21 +2,22 @@ import { useState, useEffect, useRef } from "react";
 import {
   collection, query, where, onSnapshot,
   addDoc, updateDoc, deleteDoc, doc,
-  Timestamp, or, getDocs, serverTimestamp,
+  Timestamp, or, getDocs
 } from "firebase/firestore";
 import { db } from "../firebase.js";
 
-// --- INTEGRAÇÃO COM TELEGRAM (GRUPO DA EMPRESA) ---
+// --- INTEGRAÇÃO COM TELEGRAM (CONFIGURADA) ---
 const enviarTelegram = async (parada, turma) => {
   const TOKEN = "7682222110:AAHGl8dp5fCeMrhKhWpGCqtXR5hqSNYAtas";
-  const CHAT_ID = "-1003929994601"; // ID do seu grupo configurado!
+  const CHAT_ID = "-1003929994601"; 
 
   const mensagem = `🚨 *NOVA PARADA REGISTRADA*\n\n` +
                    `📟 *Tear:* ${parada.numMáquina || parada.numTear}\n` +
                    `🛠️ *Motivo:* ${parada.motivo}\n` +
                    `👥 *Turma:* ${turma}\n` +
                    `👤 *Operador:* ${parada.operador}\n` +
-                   `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR')}`;
+                   `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR')}\n\n` +
+                   `🔗 *Acesse o App:* https://controlneomec.netlify.app/`;
 
   try {
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
@@ -25,19 +26,19 @@ const enviarTelegram = async (parada, turma) => {
       body: JSON.stringify({
         chat_id: CHAT_ID,
         text: mensagem,
-        parse_mode: "Markdown"
+        parse_mode: "Markdown",
+        disable_web_page_preview: false 
       })
     });
-    console.log("✅ Alerta enviado para o grupo do Telegram!");
   } catch (err) {
-    console.warn("❌ Falha ao enviar para o grupo:", err.message);
+    console.error("Erro Telegram:", err.message);
   }
 };
 
+// --- O HOOK PRINCIPAL (GARANTIDO O EXPORT) ---
 export function useParadas(turma, dataFiltro) {
   const [paradas, setParadas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [novaParadaEvento, setNovaParadaEvento] = useState(null);
   const isFirstRun = useRef(true);
 
   useEffect(() => {
@@ -64,10 +65,7 @@ export function useParadas(turma, dataFiltro) {
       if (!isFirstRun.current) {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added" && !snapshot.metadata.fromCache) {
-            const nova = change.doc.data();
-            // Notificação visual no App (Banner Azul)
-            window.dispatchEvent(new CustomEvent("notificar-parada", { detail: nova }));
-            setNovaParadaEvento(nova);
+            window.dispatchEvent(new CustomEvent("notificar-parada", { detail: change.doc.data() }));
           }
         });
       }
@@ -93,10 +91,7 @@ export function useParadas(turma, dataFiltro) {
       fim: null,
     };
 
-    // 1. Salva no Firebase
     await addDoc(collection(db, "paradas"), dadosParada);
-
-    // 2. Dispara para o Grupo do Telegram
     enviarTelegram(dadosParada, turma);
   };
 
@@ -140,7 +135,6 @@ export function useParadas(turma, dataFiltro) {
   return {
     paradas,
     loading,
-    novaParadaEvento,
     salvarParada,
     editarParada,
     finalizarParada,
