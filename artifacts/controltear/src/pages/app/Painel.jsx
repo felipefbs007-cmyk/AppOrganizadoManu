@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useParadas } from "../../hooks/useParadas.js";
-import { formatarMinutosParaHoras, formatarDataHora, calcularDuracao } from "../../utils/formatters.js";
+import {
+  formatarMinutosParaHoras,
+  formatarDataHora,
+  calcularDuracao,
+} from "../../utils/formatters.js";
 import { CARGOS_PAINEL, TURMAS } from "../../constants.js";
 import Icon from "../../components/Icon.jsx";
 
@@ -10,7 +14,9 @@ function StatCard({ icon, label, value, sub, color = "text-white" }) {
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col gap-1">
       <div className="flex items-center gap-2 mb-1">
         <Icon name={icon} size={16} className="text-gray-500" />
-        <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+          {label}
+        </span>
       </div>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
       {sub && <p className="text-xs text-gray-600">{sub}</p>}
@@ -21,7 +27,9 @@ function StatCard({ icon, label, value, sub, color = "text-white" }) {
 function BarraProgresso({ label, value, max, cor = "bg-blue-500", sufixo }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-gray-400 w-32 truncate flex-shrink-0">{label}</span>
+      <span className="text-xs text-gray-400 w-32 truncate flex-shrink-0">
+        {label}
+      </span>
       <div className="flex-1 bg-gray-800 rounded-full h-2 overflow-hidden">
         <div
           className={`h-2 rounded-full ${cor} transition-all`}
@@ -46,7 +54,9 @@ export default function Painel() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center">
         <Icon name="lock" size={48} className="text-gray-700" />
-        <p className="text-gray-500 text-sm">Acesso restrito a Contramestre e Tc Líder.</p>
+        <p className="text-gray-500 text-sm">
+          Acesso restrito a Contramestre e Tc Líder.
+        </p>
       </div>
     );
   }
@@ -69,7 +79,9 @@ export default function Painel() {
   const topMaquina = Object.entries(contMaquina).sort((a, b) => b[1] - a[1])[0];
 
   const contMotivo = {};
-  paradasHoje.forEach((p) => { contMotivo[p.motivo] = (contMotivo[p.motivo] || 0) + 1; });
+  paradasHoje.forEach((p) => {
+    contMotivo[p.motivo] = (contMotivo[p.motivo] || 0) + 1;
+  });
   const rankMotivos = Object.entries(contMotivo).sort((a, b) => b[1] - a[1]);
   const maxMotivo = rankMotivos[0]?.[1] || 1;
 
@@ -88,10 +100,14 @@ export default function Painel() {
   const maxMaquinaCount = rankMaquinas[0]?.[1].count || 1;
 
   const porTurma = {};
-  TURMAS.forEach((t) => { porTurma[t] = 0; });
-  paradas.filter((p) => p.data === dataFiltro).forEach((p) => {
-    if (porTurma[p.turma] !== undefined) porTurma[p.turma]++;
+  TURMAS.forEach((t) => {
+    porTurma[t] = 0;
   });
+  paradas
+    .filter((p) => p.data === dataFiltro)
+    .forEach((p) => {
+      if (porTurma[p.turma] !== undefined) porTurma[p.turma]++;
+    });
   const maxTurma = Math.max(...Object.values(porTurma), 1);
 
   const timeline = [...paradasHoje]
@@ -102,7 +118,6 @@ export default function Painel() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="px-4 pt-6 pb-28 max-w-lg mx-auto flex flex-col gap-4">
-
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white">Painel</h2>
@@ -111,7 +126,11 @@ export default function Painel() {
         </div>
 
         <div className="relative">
-          <Icon name="calendar_today" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <Icon
+            name="calendar_today"
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+          />
           <input
             type="date"
             value={dataFiltro}
@@ -122,27 +141,63 @@ export default function Painel() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Icon name="progress_activity" size={32} className="animate-spin text-blue-500" />
+            <Icon
+              name="progress_activity"
+              size={32}
+              className="animate-spin text-blue-500"
+            />
             <p className="text-gray-500 text-sm">Carregando...</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <StatCard icon="format_list_numbered" label="Paradas Hoje" value={paradasHoje.length} sub={`${finalizadas.length} finaliz. · ${abertas.length} abertas`} color="text-blue-400" />
-              <StatCard icon="schedule" label="Horas Paradas" value={minHoje > 0 ? formatarMinutosParaHoras(minHoje) : "—"} sub="somente hoje" color="text-amber-400" />
-              <StatCard icon="warning" label="Abertas Agora" value={abertas.length} sub="todos os turnos" color="text-red-400" />
-              <StatCard icon="star" label="Máquina Crítica" value={topMaquina ? `#${topMaquina[0]}` : "—"} sub={topMaquina ? `${topMaquina[1]} parada(s)` : "nenhuma hoje"} color="text-amber-400" />
+              <StatCard
+                icon="format_list_numbered"
+                label="Paradas Hoje"
+                value={paradasHoje.length}
+                sub={`${finalizadas.length} finaliz. · ${abertas.length} abertas`}
+                color="text-blue-400"
+              />
+              <StatCard
+                icon="schedule"
+                label="Horas Paradas"
+                value={minHoje > 0 ? formatarMinutosParaHoras(minHoje) : "—"}
+                sub="somente hoje"
+                color="text-amber-400"
+              />
+              <StatCard
+                icon="warning"
+                label="Abertas Agora"
+                value={abertas.length}
+                sub="todos os turnos"
+                color="text-red-400"
+              />
+              <StatCard
+                icon="star"
+                label="Máquina Crítica"
+                value={topMaquina ? `#${topMaquina[0]}` : "—"}
+                sub={topMaquina ? `${topMaquina[1]} parada(s)` : "nenhuma hoje"}
+                color="text-amber-400"
+              />
             </div>
 
             {rankMotivos.length > 0 && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Icon name="bar_chart" size={16} className="text-gray-500" />
-                  <h3 className="text-sm font-semibold text-gray-300">Motivos Mais Frequentes</h3>
+                  <h3 className="text-sm font-semibold text-gray-300">
+                    Motivos Mais Frequentes
+                  </h3>
                 </div>
                 <div className="flex flex-col gap-3">
                   {rankMotivos.map(([m, c]) => (
-                    <BarraProgresso key={m} label={m} value={c} max={maxMotivo} cor="bg-blue-500" />
+                    <BarraProgresso
+                      key={m}
+                      label={m}
+                      value={c}
+                      max={maxMotivo}
+                      cor="bg-blue-500"
+                    />
                   ))}
                 </div>
               </div>
@@ -151,20 +206,48 @@ export default function Painel() {
             {rankMaquinas.length > 0 && (
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Icon name="leaderboard" size={16} className="text-gray-500" />
-                  <h3 className="text-sm font-semibold text-gray-300">Top 5 Máquinas</h3>
+                  <Icon
+                    name="leaderboard"
+                    size={16}
+                    className="text-gray-500"
+                  />
+                  <h3 className="text-sm font-semibold text-gray-300">
+                    Top 5 Máquinas
+                  </h3>
                 </div>
                 <div className="flex flex-col gap-3">
                   {rankMaquinas.map(([maquina, info], idx) => (
                     <div key={maquina} className="flex items-center gap-3">
-                      <span className={`text-xs font-bold w-5 text-center ${idx === 0 ? "text-amber-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-700" : "text-gray-600"}`}>#{idx + 1}</span>
+                      <span
+                        className={`text-xs font-bold w-5 text-center ${idx === 0 ? "text-amber-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-700" : "text-gray-600"}`}
+                      >
+                        #{idx + 1}
+                      </span>
                       <div className="flex-1">
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="text-gray-300 font-bold">Máquina {maquina}</span>
-                          <span className="text-gray-500">{info.count} par. · {formatarMinutosParaHoras(info.mins)}</span>
+                          <span className="text-gray-300 font-bold">
+                            Máquina {maquina}
+                          </span>
+                          <span className="text-gray-500">
+                            {info.count} par. ·{" "}
+                            {formatarMinutosParaHoras(info.mins)}
+                          </span>
                         </div>
                         <div className="w-full bg-gray-800 rounded-full h-2">
-                          <div className="h-2 rounded-full transition-all" style={{ width: `${(info.count / maxMaquinaCount) * 100}%`, background: idx === 0 ? "#f59e0b" : idx === 1 ? "#94a3b8" : idx === 2 ? "#b45309" : "#44474d" }} />
+                          <div
+                            className="h-2 rounded-full transition-all"
+                            style={{
+                              width: `${(info.count / maxMaquinaCount) * 100}%`,
+                              background:
+                                idx === 0
+                                  ? "#f59e0b"
+                                  : idx === 1
+                                    ? "#94a3b8"
+                                    : idx === 2
+                                      ? "#b45309"
+                                      : "#44474d",
+                            }}
+                          />
                         </div>
                       </div>
                     </div>
@@ -176,14 +259,31 @@ export default function Painel() {
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Icon name="groups" size={16} className="text-gray-500" />
-                <h3 className="text-sm font-semibold text-gray-300">Paradas por Turma (hoje)</h3>
+                <h3 className="text-sm font-semibold text-gray-300">
+                  Paradas por Turma (hoje)
+                </h3>
               </div>
               <div className="flex items-end gap-4 h-24 px-2">
                 {Object.entries(porTurma).map(([t, count]) => (
-                  <div key={t} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-xs font-bold text-gray-300">{count}</span>
-                    <div className="w-full rounded-t-md transition-all" style={{ height: `${Math.max((count / maxTurma) * 72, count > 0 ? 8 : 2)}px`, background: t === turma ? "#3b82f6" : "#334155" }} />
-                    <span className={`text-[10px] font-bold uppercase ${t === turma ? "text-blue-400" : "text-gray-600"}`}>{t.replace("Turma ", "T")}</span>
+                  <div
+                    key={t}
+                    className="flex-1 flex flex-col items-center gap-1"
+                  >
+                    <span className="text-xs font-bold text-gray-300">
+                      {count}
+                    </span>
+                    <div
+                      className="w-full rounded-t-md transition-all"
+                      style={{
+                        height: `${Math.max((count / maxTurma) * 72, count > 0 ? 8 : 2)}px`,
+                        background: t === turma ? "#3b82f6" : "#334155",
+                      }}
+                    />
+                    <span
+                      className={`text-[10px] font-bold uppercase ${t === turma ? "text-blue-400" : "text-gray-600"}`}
+                    >
+                      {t.replace("Turma ", "T")}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -193,22 +293,37 @@ export default function Painel() {
               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Icon name="timeline" size={16} className="text-gray-500" />
-                  <h3 className="text-sm font-semibold text-gray-300">Últimas Finalizadas</h3>
+                  <h3 className="text-sm font-semibold text-gray-300">
+                    Últimas Finalizadas
+                  </h3>
                 </div>
                 <div className="flex flex-col gap-0">
                   {timeline.map((p) => {
                     const dur = calcularDuracao(p.inicio, p.fim);
                     return (
-                      <div key={p.id} className="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0">
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0"
+                      >
                         <div className="w-1 h-8 rounded-full bg-green-500 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between">
-                            <span className="text-sm font-bold text-white">Máquina {p.numTear}</span>
-                            <span className="text-xs text-gray-500 font-mono">{formatarDataHora(p.fim)?.split(" ")[1]}</span>
+                            <span className="text-sm font-bold text-white">
+                              Máquina {p.numTear}
+                            </span>
+                            <span className="text-xs text-gray-500 font-mono">
+                              {formatarDataHora(p.fim)?.split(" ")[1]}
+                            </span>
                           </div>
                           <div className="flex justify-between mt-0.5">
-                            <span className="text-xs text-gray-500 truncate">{p.motivo}</span>
-                            {dur && <span className="text-xs font-bold text-amber-400 ml-2 flex-shrink-0">{Math.round(dur)}min</span>}
+                            <span className="text-xs text-gray-500 truncate">
+                              {p.motivo}
+                            </span>
+                            {dur && (
+                              <span className="text-xs font-bold text-amber-400 ml-2 flex-shrink-0">
+                                {Math.round(dur)}min
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -221,7 +336,9 @@ export default function Painel() {
             {paradasHoje.length === 0 && (
               <div className="flex flex-col items-center py-12 gap-3">
                 <Icon name="bar_chart" size={48} className="text-gray-700" />
-                <p className="text-gray-500 text-sm">Sem dados para esta data.</p>
+                <p className="text-gray-500 text-sm">
+                  Sem dados para esta data.
+                </p>
               </div>
             )}
           </>
