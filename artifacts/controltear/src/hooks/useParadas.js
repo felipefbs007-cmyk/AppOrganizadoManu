@@ -12,7 +12,7 @@ const enviarTelegram = async (parada, turma) => {
   const CHAT_ID = "-1003929994601"; 
 
   const mensagem = `🚨 *NOVA PARADA REGISTRADA*\n\n` +
-                   `📟 *Tear:* ${parada.numMáquina || parada.numTear}\n` +
+                   `📟 *Tear:* ${parada.numTear || parada.numTear}\n` +
                    `🛠️ *Motivo:* ${parada.motivo}\n` +
                    `👥 *Turma:* ${turma}\n` +
                    `👤 *Operador:* ${parada.operador}\n` +
@@ -78,9 +78,9 @@ export function useParadas(turma, dataFiltro) {
     return () => unsub();
   }, [turma, dataFiltro]);
 
-  const salvarParada = async ({ numMáquina, motivo, observacao, operador, data }) => {
+  const salvarParada = async ({ numTear, motivo, observacao, operador, data }) => {
     const dadosParada = {
-      numMáquina,
+      numTear,
       motivo,
       observacao: observacao || "",
       turma,
@@ -102,9 +102,9 @@ export function useParadas(turma, dataFiltro) {
     });
   };
 
-  const editarParada = async (id, { numMáquina, motivo, observacao, horaInicio, horaFim }) => {
+  const editarParada = async (id, { numTear, motivo, observacao, horaInicio, horaFim }) => {
     const updateObj = {
-      numMáquina,
+      numTear,
       motivo,
       observacao: observacao || "",
       inicio: Timestamp.fromDate(new Date(horaInicio)),
