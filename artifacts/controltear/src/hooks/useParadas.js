@@ -2,22 +2,21 @@ import { useState, useEffect, useRef } from "react";
 import {
   collection, query, where, onSnapshot,
   addDoc, updateDoc, deleteDoc, doc,
-  Timestamp, or, getDocs
+  Timestamp, or, getDocs, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase.js";
 
-// --- INTEGRAÇÃO COM TELEGRAM (CONFIGURADA) ---
+// --- INTEGRAÇÃO COM TELEGRAM (GRUPO DA EMPRESA) ---
 const enviarTelegram = async (parada, turma) => {
   const TOKEN = "7682222110:AAHGl8dp5fCeMrhKhWpGCqtXR5hqSNYAtas";
-  const CHAT_ID = "-1003929994601"; 
+  const CHAT_ID = "-1003929994601"; // ID do seu grupo configurado!
 
   const mensagem = `🚨 *NOVA PARADA REGISTRADA*\n\n` +
-                   `📟 *Tear:* ${parada.numTear || parada.numTear}\n` +
+                   `📟 *Tear:* ${parada.numMáquina || parada.numTear}\n` +
                    `🛠️ *Motivo:* ${parada.motivo}\n` +
                    `👥 *Turma:* ${turma}\n` +
                    `👤 *Operador:* ${parada.operador}\n` +
-                   `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR')}\n\n` +
-                   `🔗 *Acesse o App:* https://controlneomec.netlify.app/`;
+                   `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR')}`;
 
   try {
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
@@ -26,19 +25,19 @@ const enviarTelegram = async (parada, turma) => {
       body: JSON.stringify({
         chat_id: CHAT_ID,
         text: mensagem,
-        parse_mode: "Markdown",
-        disable_web_page_preview: false 
+        parse_mode: "Markdown"
       })
     });
+    console.log("✅ Alerta enviado para o grupo do Telegram!");
   } catch (err) {
-    console.error("Erro Telegram:", err.message);
+    console.warn("❌ Falha ao enviar para o grupo:", err.message);
   }
 };
 
-// --- O HOOK PRINCIPAL (GARANTIDO O EXPORT) ---
 export function useParadas(turma, dataFiltro) {
   const [paradas, setParadas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [novaParadaEvento, setNovaParadaEvento] = useState(null);
   const isFirstRun = useRef(true);
 
   useEffect(() => {
@@ -65,7 +64,10 @@ export function useParadas(turma, dataFiltro) {
       if (!isFirstRun.current) {
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added" && !snapshot.metadata.fromCache) {
-            window.dispatchEvent(new CustomEvent("notificar-parada", { detail: change.doc.data() }));
+            const nova = change.doc.data();
+            // Notificação visual no App (Banner Azul)
+            window.dispatchEvent(new CustomEvent("notificar-parada", { detail: nova }));
+            setNovaParadaEvento(nova);
           }
         });
       }
@@ -78,9 +80,9 @@ export function useParadas(turma, dataFiltro) {
     return () => unsub();
   }, [turma, dataFiltro]);
 
-  const salvarParada = async ({ numTear, motivo, observacao, operador, data }) => {
+  const salvarParada = async ({ numMáquina, motivo, observacao, operador, data }) => {
     const dadosParada = {
-      numTear,
+      numMáquina,
       motivo,
       observacao: observacao || "",
       turma,
@@ -91,7 +93,10 @@ export function useParadas(turma, dataFiltro) {
       fim: null,
     };
 
+    // 1. Salva no Firebase
     await addDoc(collection(db, "paradas"), dadosParada);
+
+    // 2. Dispara para o Grupo do Telegram
     enviarTelegram(dadosParada, turma);
   };
 
@@ -102,9 +107,9 @@ export function useParadas(turma, dataFiltro) {
     });
   };
 
-  const editarParada = async (id, { numTear, motivo, observacao, horaInicio, horaFim }) => {
+  const editarParada = async (id, { numMáquina, motivo, observacao, horaInicio, horaFim }) => {
     const updateObj = {
-      numTear,
+      numMáquina,
       motivo,
       observacao: observacao || "",
       inicio: Timestamp.fromDate(new Date(horaInicio)),
@@ -135,6 +140,7 @@ export function useParadas(turma, dataFiltro) {
   return {
     paradas,
     loading,
+    novaParadaEvento,
     salvarParada,
     editarParada,
     finalizarParada,

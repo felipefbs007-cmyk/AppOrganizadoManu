@@ -1,16 +1,18 @@
 {
-  "short_name": "Manucontrol",
-  "name": "Manucontrol - Gestão de Paradas",
-  "description": "Sistema de controle de paradas de máquinas têxteis.",
+  "name": "ControlTear",
+  "short_name": "ControlTear",
+  "description": "Controle de Paradas de Produção",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#2563eb",
-  "background_color": "#ffffff"
+  ]
 }

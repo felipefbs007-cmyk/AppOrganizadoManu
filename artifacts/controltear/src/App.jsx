@@ -20,7 +20,7 @@ function Header({ turma, onChangeTurma, onLogout, userName }) {
         <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
           <Icon name="factory" size={16} className="text-white" filled />
         </div>
-        <span className="font-bold text-white text-sm">ControlTear</span>
+        <span className="font-bold text-white text-sm">ControlMáquina</span>
       </div>
 
       <div className="flex items-center gap-2">

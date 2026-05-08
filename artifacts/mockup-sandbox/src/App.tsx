@@ -48,29 +48,7 @@ function App() {
   const [alerta, setAlerta] = useState<any>(null);
   const previewPath = getPreviewPath();
 
-  // --- 1. LÓGICA DE INSTALAÇÃO PWA (PERGUNTAR SE QUER BAIXAR) ---
-  useEffect(() => {
-    const handler = (e: any) => {
-      // Impede o banner padrão do Chrome para a gente controlar
-      e.preventDefault();
-      const savePrompt = e;
-      
-      // Pergunta após 5 segundos de uso
-      setTimeout(() => {
-        if (window.confirm("Deseja instalar o Manucontrol no seu celular para acesso rápido?")) {
-          savePrompt.prompt();
-          savePrompt.userChoice.then((choice: any) => {
-            if (choice.outcome === 'accepted') console.log('App Instalado!');
-          });
-        }
-      }, 5000);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  // --- 2. LÓGICA DE NOTIFICAÇÃO VISUAL (BANNER AZUL) ---
+  // --- LÓGICA DE NOTIFICAÇÃO (ADICIONADA AQUI) ---
   useEffect(() => {
     const ouvirEvento = (e: any) => {
       const dados = e.detail;
@@ -80,14 +58,14 @@ function App() {
       if (dados.operador !== userLogado?.nome) {
         setAlerta(dados);
         
-        // Toca o alerta sonoro (bip rápido)
+        // Toca o alerta sonoro
         try {
           const audio = new (window.AudioContext || (window as any).webkitAudioContext)();
           const osc = audio.createOscillator();
           osc.connect(audio.destination);
           osc.start();
           osc.stop(audio.currentTime + 0.2);
-        } catch (err) { console.log("Áudio bloqueado pelo navegador"); }
+        } catch (err) { console.log("Áudio bloqueado"); }
 
         // Fecha o banner após 7 segundos
         setTimeout(() => setAlerta(null), 7000);
